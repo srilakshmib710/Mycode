@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioLab Planner | Scientific Method & Experiment Design</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for visualization simulation -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bio: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 3px;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        .pulse-subtle {
+            animation: pulse-subtle 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-bio-500 selection:text-white">
+
+    <!-- TOP NAVIGATION & HEADER -->
+    <header class="bg-slate-900 text-white border-b border-bio-600/30 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo & Name -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-bio-600 to-teal-400 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                        <i class="fa-solid font-bold fa-flask"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-tight text-white">BioLab<span class="text-bio-500">Planner</span></span>
+                        <span class="hidden sm:inline-block text-xs bg-bio-900 text-bio-100 px-2 py-0.5 rounded-full ml-2 border border-bio-600/50">AP/IB Biology Ready</span>
+                    </div>
+                </div>
+
+                <!-- Progress Indicator (Visible in design steps) -->
+                <div class="hidden md:flex items-center space-x-2 text-xs font-medium text-slate-300">
+                    <span id="headerProgressText">Stage 1 of 5: Hypothesis</span>
+                    <div class="w-32 bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="headerProgressBar" class="bg-bio-500 h-full transition-all duration-300" style="width: 20%;"></div>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="loadPresetScenarioModal()" class="px-3 py-1.5 text-xs sm:text-sm bg-slate-800 hover:bg-slate-700 text-bio-100 rounded-md border border-bio-500/30 transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-folder-open text-bio-500"></i>
+                        <span>Load Scenario</span>
+                    </button>
+                    <button onclick="resetPlanner()" class="px-3 py-1.5 text-xs sm:text-sm bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-200 rounded-md transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span class="hidden sm:inline">Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="bg-slate-850 border-t border-slate-700 overflow-x-auto custom-scrollbar">
+            <div class="max-w-7xl mx-auto px-4 flex space-x-1 sm:space-x-4 min-w-max text-xs sm:text-sm">
+                <button id="tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn px-4 py-3 font-medium border-b-2 border-bio-500 text-bio-500 flex items-center gap-2">
+                    <i class="fa-solid fa-house"></i> Overview
+                </button>
+                <button id="tab-hypothesis" onclick="switchTab('hypothesis')" class="tab-btn px-4 py-3 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 text-xs flex items-center justify-center font-bold">1</span> Hypothesis
+                </button>
+                <button id="tab-variables" onclick="switchTab('variables')" class="tab-btn px-4 py-3 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 text-xs flex items-center justify-center font-bold">2</span> Variables & Controls
+                </button>
+                <button id="tab-protocol" onclick="switchTab('protocol')" class="tab-btn px-4 py-3 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 text-xs flex items-center justify-center font-bold">3</span> Protocol & Replication
+                </button>
+                <button id="tab-review" onclick="switchTab('review')" class="tab-btn px-4 py-3 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 text-xs flex items-center justify-center font-bold">4</span> Peer Review
+                </button>
+                <button id="tab-report" onclick="switchTab('report')" class="tab-btn px-4 py-3 font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-file-export text-bio-500"></i> Final Report
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ================= PAGE 0: DASHBOARD & PRESETS ================= -->
+        <section id="page-dashboard" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-bio-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl border border-bio-600/30 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+                    <i class="fa-solid fa-dna text-9xl"></i>
+                </div>
+                <div class="max-w-3xl space-y-4 relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-bio-500/20 text-bio-300 text-xs font-semibold border border-bio-500/30">
+                        <i class="fa-solid fa-lightbulb"></i> Scientific Methodology Masterclass
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Master Experimental Design for Biology</h1>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        BioLab Planner guides you through formulating testable hypotheses, isolating independent and dependent variables, structuring valid positive/negative controls, and avoiding confounding variables.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="switchTab('hypothesis')" class="px-5 py-2.5 bg-bio-600 hover:bg-bio-500 text-white font-semibold rounded-lg shadow-md transition flex items-center gap-2">
+                            <span>Start Custom Experiment</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="loadPresetScenarioModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg border border-slate-600 transition flex items-center gap-2">
+                            <i class="fa-solid fa-vial"></i>
+                            <span>Explore Sample Scenarios</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats & Design Pillars -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-4">
+                    <div class="p-3 bg-bio-100 text-bio-700 rounded-lg">
+                        <i class="fa-solid fa-bullseye text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Step 1</h4>
+                        <p class="font-bold text-slate-800">Testable Hypothesis</p>
+                        <p class="text-xs text-slate-500 mt-0.5">IF-THEN-BECAUSE structure</p>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-4">
+                    <div class="p-3 bg-blue-100 text-blue-700 rounded-lg">
+                        <i class="fa-solid fa-sliders text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Step 2</h4>
+                        <p class="font-bold text-slate-800">Variable Isolation</p>
+                        <p class="text-xs text-slate-500 mt-0.5">IV vs DV vs Controlled</p>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-4">
+                    <div class="p-3 bg-purple-100 text-purple-700 rounded-lg">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Step 3</h4>
+                        <p class="font-bold text-slate-800">Controls & Replication</p>
+                        <p class="text-xs text-slate-500 mt-0.5">n ≥ 3 trials, validity checks</p>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-4">
+                    <div class="p-3 bg-amber-100 text-amber-700 rounded-lg">
+                        <i class="fa-solid fa-user-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Step 4</h4>
+                        <p class="font-bold text-slate-800">Peer Evaluation</p>
+                        <p class="text-xs text-slate-500 mt-0.5">AP/IB rubric alignment</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preset Scenarios Grid -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Preset Practice Scenarios</h2>
+                        <p class="text-xs text-slate-500">Select a classic biology lab scenario to auto-populate the planner and test your analytical skills.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="presetScenarioGrid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 1: GUIDED HYPOTHESIS BUILDER ================= -->
+        <section id="page-hypothesis" class="hidden space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-bio-100 text-bio-700 text-sm flex items-center justify-center font-bold">1</span>
+                            Guided Hypothesis Builder
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Formulate a rigorous, testable biological hypothesis using the standard "If... Then... Because..." framework.</p>
+                    </div>
+                    <span class="hidden sm:inline-flex px-3 py-1 bg-bio-50 text-bio-700 text-xs font-semibold rounded-full border border-bio-200">
+                        <i class="fa-solid fa-circle-info mr-1.5 mt-0.5"></i> Testability Check
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Form Area -->
+                    <div class="lg:col-span-2 space-y-5">
+                        
+                        <!-- Title / Topic Input -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Experiment Title / Research Topic</label>
+                            <input type="text" id="hypoTitle" placeholder="e.g. Effect of Temperature on Catalase Enzyme Reaction Rate" 
+                                oninput="updateHypothesisPreview()" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-bio-500 focus:border-bio-500 text-sm">
+                        </div>
+
+                        <!-- IF Component -->
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-bold text-bio-700 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-bio-600 text-white text-xs rounded font-mono">IF</span>
+                                    Independent Variable Action (What are you manipulating?)
+                                </label>
+                                <span id="badgeIf" class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Needs Input</span>
+                            </div>
+                            <input type="text" id="hypoIf" placeholder="the temperature of catalase enzyme solution is increased from 20°C to 60°C," 
+                                oninput="updateHypothesisPreview()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-bio-500 text-sm bg-white">
+                            <p class="text-xs text-slate-500">Tip: Include specific metrics or direction of change (e.g., increasing salinity, decreasing pH).</p>
+                        </div>
+
+                        <!-- THEN Component -->
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-bold text-blue-700 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-blue-600 text-white text-xs rounded font-mono">THEN</span>
+                                    Expected Measurable Result (Dependent Variable outcome)
+                                </label>
+                                <span id="badgeThen" class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Needs Input</span>
+                            </div>
+                            <input type="text" id="hypoThen" placeholder="the rate of oxygen bubble production (mL/min) will initially increase up to 40°C, then drastically decrease," 
+                                oninput="updateHypothesisPreview()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-bio-500 text-sm bg-white">
+                            <p class="text-xs text-slate-500">Tip: State the quantifiable biological response you will measure.</p>
+                        </div>
+
+                        <!-- BECAUSE Component -->
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-bold text-purple-700 flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-purple-600 text-white text-xs rounded font-mono">BECAUSE</span>
+                                    Biological Reasoning (Scientific Principle)
+                                </label>
+                                <span id="badgeBecause" class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Needs Input</span>
+                            </div>
+                            <textarea id="hypoBecause" rows="3" placeholder="higher kinetic energy increases molecular collisions up to an optimal point, beyond which thermal denaturation alters the active site conformation." 
+                                oninput="updateHypothesisPreview()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-bio-500 text-sm bg-white"></textarea>
+                            <p class="text-xs text-slate-500">Tip: Ground your prediction in cellular/molecular biological concepts (enzymes, osmolarity, light reactions).</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Live Guidance & Validation Sidebar -->
+                    <div class="bg-slate-900 text-slate-100 p-5 rounded-xl flex flex-col justify-between space-y-4 shadow-inner">
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-bio-400 border-b border-slate-700 pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-square-check"></i> Live Hypothesis Preview
+                            </h3>
+                            
+                            <div id="hypoPreviewBox" class="p-4 bg-slate-800/80 rounded-lg border border-slate-700 text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+                                "If [enter IV action], then [enter expected outcome], because [enter biological reason]."
+                            </div>
+
+                            <div class="space-y-2">
+                                <h4 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Quality Diagnostic:</h4>
+                                <ul class="space-y-2 text-xs">
+                                    <li id="chkIvPresent" class="flex items-center gap-2 text-slate-400">
+                                        <i class="fa-solid fa-circle-xmark text-slate-500"></i> Clear Independent Variable (IV)
+                                    </li>
+                                    <li id="chkDvMeasurable" class="flex items-center gap-2 text-slate-400">
+                                        <i class="fa-solid fa-circle-xmark text-slate-500"></i> Quantifiable Dependent Variable (DV)
+                                    </li>
+                                    <li id="chkBioReasoning" class="flex items-center gap-2 text-slate-400">
+                                        <i class="fa-solid fa-circle-xmark text-slate-500"></i> Scientific Mechanism Explained
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800">
+                            <button onclick="switchTab('variables')" class="w-full py-2.5 bg-bio-600 hover:bg-bio-500 text-white font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2">
+                                <span>Proceed to Variable Identification</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 2: VARIABLE IDENTIFICATION & CONTROL WORKSHOP ================= -->
+        <section id="page-variables" class="hidden space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-bio-100 text-bio-700 text-sm flex items-center justify-center font-bold">2</span>
+                            Variables & Control Group Workshop
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Isolate your key factors to ensure only ONE variable is manipulated while all potential confounders are held constant.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- Independent & Dependent Variables Card -->
+                    <div class="space-y-6">
+                        <!-- IV -->
+                        <div class="bg-bio-50/50 p-5 rounded-xl border border-bio-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="font-bold text-bio-900 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-sliders text-bio-600"></i> Independent Variable (IV)
+                                </label>
+                                <span class="text-xs bg-bio-100 text-bio-800 px-2 py-0.5 rounded font-semibold">Manipulated Factor</span>
+                            </div>
+                            <input type="text" id="varIV" placeholder="e.g. Temperature of enzyme solution (°C)" 
+                                oninput="updateVariables()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-bio-500">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tested Levels / Range</label>
+                                    <input type="text" id="varIVLevels" placeholder="e.g. 10°C, 25°C, 40°C, 55°C, 70°C" oninput="updateVariables()" class="w-full px-3 py-1.5 rounded border border-slate-300 text-xs bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Units of Measurement</label>
+                                    <input type="text" id="varIVUnits" placeholder="e.g. Degrees Celsius (°C)" oninput="updateVariables()" class="w-full px-3 py-1.5 rounded border border-slate-300 text-xs bg-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DV -->
+                        <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="font-bold text-blue-900 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-line text-blue-600"></i> Dependent Variable (DV)
+                                </label>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-semibold">Measured Response</span>
+                            </div>
+                            <input type="text" id="varDV" placeholder="e.g. Rate of oxygen gas generation" 
+                                oninput="updateVariables()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Quantifiable Metric</label>
+                                    <input type="text" id="varDVMetric" placeholder="e.g. Volume of O2 produced in 3 min (mL/min)" oninput="updateVariables()" class="w-full px-3 py-1.5 rounded border border-slate-300 text-xs bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Instrument/Equipment Used</label>
+                                    <input type="text" id="varDVTool" placeholder="e.g. Gas pressure sensor / O2 probe" oninput="updateVariables()" class="w-full px-3 py-1.5 rounded border border-slate-300 text-xs bg-white">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Control Groups & Controlled Variables -->
+                    <div class="space-y-6">
+                        
+                        <!-- Control Groups -->
+                        <div class="bg-amber-50/50 p-5 rounded-xl border border-amber-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="font-bold text-amber-900 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-halved text-amber-600"></i> Control Groups
+                                </label>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Baseline Comparison</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Negative Control Group (Baseline/No Treatment)</label>
+                                    <input type="text" id="varNegControl" placeholder="e.g. Substrate + distilled water (no catalase enzyme added)" 
+                                        oninput="updateVariables()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-amber-500">
+                                    <p class="text-[11px] text-slate-500 mt-1">Proves that the change in DV does not occur spontaneously without the IV factor.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Positive Control Group (Known Outcome - Optional)</label>
+                                    <input type="text" id="varPosControl" placeholder="e.g. Enzyme solution kept at optimal room temperature (25°C)" 
+                                        oninput="updateVariables()" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controlled Variables List -->
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-lock text-slate-600"></i> Controlled Variables (Constants)
+                                </label>
+                                <button onclick="addControlledVariableField()" class="text-xs bg-bio-600 hover:bg-bio-500 text-white px-2.5 py-1 rounded font-semibold transition flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Add Variable
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-500">List all environmental, chemical, or biological factors that must remain identical across ALL trials to prevent confounding variables.</p>
+                            
+                            <div id="controlledVarsContainer" class="space-y-2">
+                                <!-- Dynamic dynamic items populated here -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Live Validation Flags -->
+                <div id="variableValidationAlert" class="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg mt-0.5"></i>
+                    <div>
+                        <p class="font-bold">Validation Feedback:</p>
+                        <ul id="variableValidationList" class="list-disc list-inside mt-1 space-y-0.5">
+                            <li>Please enter quantifiable units for your Independent Variable.</li>
+                            <li>Ensure a Negative Control Group is designated to prove validity.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="switchTab('protocol')" class="px-6 py-2.5 bg-bio-600 hover:bg-bio-500 text-white font-semibold rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <span>Proceed to Protocol & Replication</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 3: EXPERIMENTAL PROCEDURE & REPLICATION CHECKLIST ================= -->
+        <section id="page-protocol" class="hidden space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-bio-100 text-bio-700 text-sm flex items-center justify-center font-bold">3</span>
+                            Protocol & Replication Checklist
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Design a step-by-step reproducible protocol, calculate sample size power, and address safety/bias mitigations.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- Left 2 Cols: Step-by-Step Step Builder & Replication Tracker -->
+                    <div class="lg:col-span-2 space-y-6">
+
+                        <!-- Sample Size & Replication Calculator -->
+                        <div class="bg-gradient-to-r from-bio-900 to-slate-900 text-white p-5 rounded-xl shadow-md space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                                <h3 class="font-bold text-bio-400 text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-calculator"></i> Sample Validity & Replication Power
+                                </h3>
+                                <span class="text-xs bg-bio-500/20 text-bio-300 px-2.5 py-0.5 rounded-full border border-bio-500/30">AP/IB Rule: n ≥ 3</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1">Number of IV Levels</label>
+                                    <input type="number" id="numIvLevels" min="1" max="10" value="5" onchange="calculateSampleValidity()" class="w-full px-3 py-1.5 rounded bg-slate-800 border border-slate-700 text-white text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1">Replicates per Level (n)</label>
+                                    <input type="number" id="numReplicates" min="1" max="20" value="3" onchange="calculateSampleValidity()" class="w-full px-3 py-1.5 rounded bg-slate-800 border border-slate-700 text-white text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-300 mb-1">Total Test Runs</label>
+                                    <div id="totalTestRunsDisplay" class="px-3 py-1.5 bg-bio-950 text-bio-300 font-bold text-sm rounded border border-bio-700">
+                                        15 total trials
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="replicationFeedback" class="p-3 bg-slate-800/80 rounded-lg text-xs text-slate-200 border-l-4 border-bio-500 flex items-center justify-between">
+                                <span><i class="fa-solid fa-circle-check text-bio-400 mr-2"></i> Sufficient replication for calculating Standard Deviation and Error Bars.</span>
+                            </div>
+                        </div>
+
+                        <!-- Step-by-Step Protocol List -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                    <i class="fa-solid fa-list-ol text-bio-600"></i> Sequential Protocol
+                                </h3>
+                                <button onclick="addProtocolStep()" class="px-3 py-1.5 bg-bio-600 hover:bg-bio-500 text-white text-xs font-semibold rounded transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plus"></i> Add Step
+                                </button>
+                            </div>
+
+                            <div id="protocolStepsContainer" class="space-y-3">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Col: Interactive Safety & Reliability Checklist -->
+                    <div class="space-y-6">
+                        
+                        <!-- Safety Checklist -->
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fa-solid fa-user-shield text-amber-600"></i> Safety & Ethics Checklist
+                            </h3>
+
+                            <div class="space-y-2 text-xs">
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkPPE" checked class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Personal Protective Equipment (PPE): Eye goggles, lab coat, nitrile gloves.</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkDisposal" checked class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Proper Chemical/Biological Waste Disposal identified.</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkBioethics" checked class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Ethical handling of live organisms (minimal distress protocol).</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Precision & Bias Mitigation -->
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-200 pb-2">
+                                <i class="fa-solid fa-microscope text-blue-600"></i> Precision & Bias Mitigation
+                            </h3>
+
+                            <div class="space-y-2 text-xs">
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkRandomization" checked class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Randomized assignment of biological samples across treatments.</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkBlind" class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Single-blind / Double-blind measurement where subjective.</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" id="chkCalibration" checked class="mt-0.5 rounded text-bio-600 focus:ring-bio-500">
+                                    <span>Equipment calibration (e.g. zeroing digital scale/pH probe).</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Safety Equipment Input -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Specialized Safety Gear / Precautions</label>
+                            <textarea id="safetyNotes" rows="3" placeholder="e.g. Use thermal insulated gloves when handling heated water bath at 70°C. Hydrogen peroxide is an irritant." class="w-full p-3 border border-slate-300 rounded-lg text-xs"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-between items-center border-t border-slate-100 pt-4">
+                    <button onclick="switchTab('variables')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-sm transition">
+                        Back
+                    </button>
+                    <button onclick="switchTab('review')" class="px-6 py-2.5 bg-bio-600 hover:bg-bio-500 text-white font-semibold rounded-lg shadow transition flex items-center gap-2 text-sm">
+                        <span>Proceed to Peer Review Simulator</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 4: PEER REVIEW & RUBRIC EVALUATOR ================= -->
+        <section id="page-review" class="hidden space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-full bg-bio-100 text-bio-700 text-sm flex items-center justify-center font-bold">4</span>
+                            Peer Review & Rubric Evaluator
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Simulate an expert scientific peer review based on AP Biology / IB Biology experimental criteria.</p>
+                    </div>
+                    <button onclick="runPeerReviewSimulation()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-bio-400"></i>
+                        <span>Run Automated Review</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- Score Cards & Rubric -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">AP/IB Experimental Rubric Breakdown</h3>
+
+                        <div class="space-y-3" id="rubricCriteriaList">
+                            <!-- Criterion 1 -->
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-800 text-sm">1. Testability & Hypothesis Clarity</span>
+                                        <span id="scoreBadge1" class="text-xs px-2 py-0.5 rounded font-bold bg-bio-100 text-bio-800">4 / 4</span>
+                                    </div>
+                                    <p id="scoreComment1" class="text-xs text-slate-600">Hypothesis follows proper structure with clear testable prediction and scientific reasoning.</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="setScore(1, 1)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">1</button>
+                                    <button onclick="setScore(1, 2)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">2</button>
+                                    <button onclick="setScore(1, 3)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">3</button>
+                                    <button onclick="setScore(1, 4)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold bg-bio-600 text-white">4</button>
+                                </div>
+                            </div>
+
+                            <!-- Criterion 2 -->
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-800 text-sm">2. Variable Isolation & Metric Precision</span>
+                                        <span id="scoreBadge2" class="text-xs px-2 py-0.5 rounded font-bold bg-bio-100 text-bio-800">4 / 4</span>
+                                    </div>
+                                    <p id="scoreComment2" class="text-xs text-slate-600">IV and DV are clearly identified with units. Controlled variables are thoroughly specified.</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="setScore(2, 1)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">1</button>
+                                    <button onclick="setScore(2, 2)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">2</button>
+                                    <button onclick="setScore(2, 3)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">3</button>
+                                    <button onclick="setScore(2, 4)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold bg-bio-600 text-white">4</button>
+                                </div>
+                            </div>
+
+                            <!-- Criterion 3 -->
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-800 text-sm">3. Control Validity & Baseline Design</span>
+                                        <span id="scoreBadge3" class="text-xs px-2 py-0.5 rounded font-bold bg-bio-100 text-bio-800">4 / 4</span>
+                                    </div>
+                                    <p id="scoreComment3" class="text-xs text-slate-600">Negative control group correctly isolated to establish a true baseline.</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="setScore(3, 1)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">1</button>
+                                    <button onclick="setScore(3, 2)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">2</button>
+                                    <button onclick="setScore(3, 3)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">3</button>
+                                    <button onclick="setScore(3, 4)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold bg-bio-600 text-white">4</button>
+                                </div>
+                            </div>
+
+                            <!-- Criterion 4 -->
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-800 text-sm">4. Replication & Reliability Power</span>
+                                        <span id="scoreBadge4" class="text-xs px-2 py-0.5 rounded font-bold bg-bio-100 text-bio-800">4 / 4</span>
+                                    </div>
+                                    <p id="scoreComment4" class="text-xs text-slate-600">Sample size (n ≥ 3) is adequate for calculating statistical error margins.</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="setScore(4, 1)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">1</button>
+                                    <button onclick="setScore(4, 2)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">2</button>
+                                    <button onclick="setScore(4, 3)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold hover:bg-bio-100">3</button>
+                                    <button onclick="setScore(4, 4)" class="w-8 h-8 rounded border border-slate-300 text-xs font-bold bg-bio-600 text-white">4</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Peer Review Feedback Generator Output -->
+                    <div class="bg-slate-900 text-white p-5 rounded-xl flex flex-col justify-between space-y-4 shadow-xl">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                                <h3 class="text-sm font-bold text-bio-400 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-comments"></i> Simulated Review Panel
+                                </h3>
+                                <span id="totalRubricScore" class="text-xs font-bold bg-bio-600 text-white px-2.5 py-1 rounded-full">Score: 16 / 16</span>
+                            </div>
+
+                            <!-- Peer Feedback Feed -->
+                            <div id="peerFeedbackStream" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar text-xs">
+                                <div class="p-3 bg-slate-800 rounded-lg border border-slate-700">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="font-bold text-bio-300">Dr. Aris (Bio Reviewer)</span>
+                                        <span class="text-[10px] text-slate-400">Just now</span>
+                                    </div>
+                                    <p class="text-slate-300">"Strong experimental layout! The choice to measure gas pressure as DV provides quantitative precision over counting bubbles manually."</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800">
+                            <button onclick="switchTab('report')" class="w-full py-2.5 bg-bio-600 hover:bg-bio-500 text-white font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2">
+                                <span>Generate Final Lab Report</span>
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE 5: FULL EXPERIMENT OVERVIEW & EXPORT ================= -->
+        <section id="page-report" class="hidden space-y-6">
+            
+            <!-- Controls bar -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Experimental Procedure Summary & Export</h2>
+                    <p class="text-xs text-slate-500">Review your finalized experimental design document or export it for lab submission.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="copyMarkdownReport()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy Markdown</span>
+                    </button>
+                    <button onclick="window.print()" class="px-3 py-2 bg-bio-600 hover:bg-bio-500 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Print / Save PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Preview Paper View -->
+            <div id="printableReport" class="bg-white p-8 sm:p-12 rounded-xl border border-slate-300 shadow-lg max-w-4xl mx-auto space-y-8 text-slate-900">
+                
+                <!-- Report Title Banner -->
+                <div class="border-b-2 border-bio-600 pb-6 flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bio-700">BioLab Planner - Scientific Investigation Proposal</span>
+                        <h1 id="repTitle" class="text-3xl font-extrabold text-slate-900 mt-1">Effect of Temperature on Enzyme Activity</h1>
+                        <p class="text-xs text-slate-500 mt-1">Author: Student Researcher &bull; Target Field: Cellular & Molecular Biology</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-3 py-1 bg-bio-100 text-bio-800 font-bold text-xs rounded-full border border-bio-300">
+                            Status: Peer Reviewed
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 1. Hypothesis Section -->
+                <div class="space-y-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">1. Formulated Hypothesis</h3>
+                    <p id="repHypothesis" class="text-sm font-serif text-slate-800 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-200 italic">
+                        Loading hypothesis...
+                    </p>
+                </div>
+
+                <!-- 2. Variables Matrix -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">2. Experimental Variable Design</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3 bg-bio-50/50 rounded-lg border border-bio-200">
+                            <span class="font-bold text-bio-900 uppercase">Independent Variable (IV):</span>
+                            <p id="repIV" class="text-slate-800 font-medium mt-0.5">-</p>
+                            <p id="repIVDetails" class="text-slate-500 mt-1">-</p>
+                        </div>
+                        <div class="p-3 bg-blue-50/50 rounded-lg border border-blue-200">
+                            <span class="font-bold text-blue-900 uppercase">Dependent Variable (DV):</span>
+                            <p id="repDV" class="text-slate-800 font-medium mt-0.5">-</p>
+                            <p id="repDVDetails" class="text-slate-500 mt-1">-</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3 bg-amber-50/50 rounded-lg border border-amber-200">
+                            <span class="font-bold text-amber-900 uppercase">Control Groups:</span>
+                            <p id="repControls" class="text-slate-800 mt-0.5">-</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="font-bold text-slate-800 uppercase">Controlled Variables (Constants):</span>
+                            <ul id="repControlledVars" class="list-disc list-inside text-slate-700 mt-0.5 space-y-0.5">
+                                <li>-</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Protocol & Replication -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">3. Step-by-Step Step Protocol & Replication</h3>
+                    <div id="repProtocolList" class="space-y-2 text-xs text-slate-800">
+                        <!-- Populated dynamic -->
+                    </div>
+                    <div class="p-3 bg-slate-100 rounded-lg text-xs flex justify-between text-slate-700">
+                        <span id="repReplicationPower">Replication Power: 5 IV Levels × 3 Replicates = 15 Total Test Runs</span>
+                        <span id="repSafetySummary">PPE: Full Gear Required</span>
+                    </div>
+                </div>
+
+                <!-- 4. Peer Review Scorecard -->
+                <div class="space-y-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">4. Peer Evaluation Summary</h3>
+                    <div class="p-4 bg-slate-900 text-white rounded-lg flex items-center justify-between text-xs">
+                        <div>
+                            <span class="text-bio-400 font-bold">AP/IB Experimental Methodology Rating</span>
+                            <p class="text-slate-300 mt-0.5">Design validated for testability, control isolation, and statistical power.</p>
+                        </div>
+                        <span id="repFinalScore" class="text-lg font-bold bg-bio-600 px-3 py-1 rounded">16 / 16</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PRESET SELECTION MODAL -->
+    <div id="presetModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-flask text-bio-600"></i> Select Practice Biology Scenario
+                </h3>
+                <button onclick="closePresetModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500">Choosing a preset scenario will auto-fill the hypothesis builder, variables, and protocol steps so you can practice reviewing and tweaking experimental designs.</p>
+
+            <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar" id="modalPresetList">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION LOGIC -->
+    <script>
+        /* ================= STATE MANAGEMENT & DATA MODELS ================= */
+        const PRESET_SCENARIOS = [
+            {
+                id: 'catalase',
+                title: 'Enzyme Kinetics & Temperature',
+                topic: 'Effect of Temperature on Catalase Enzyme Reaction Rates',
+                category: 'Enzymology',
+                ifText: 'the temperature of catalase enzyme solution is increased from 10°C to 70°C,',
+                thenText: 'the rate of oxygen bubble production (mL/min) will increase up to an optimal 40°C and then plummet,',
+                becauseText: 'thermal kinetic energy accelerates enzyme-substrate collisions up to the optimal point, after which thermal agitation denatures the active site conformation.',
+                iv: 'Temperature of Enzyme Solution',
+                ivLevels: '10°C, 25°C, 40°C, 55°C, 70°C',
+                ivUnits: 'Degrees Celsius (°C)',
+                dv: 'Rate of Oxygen Gas Production',
+                dvMetric: 'Volume of O2 gas generated per minute (mL/min)',
+                dvTool: 'Gas pressure sensor / inverted graduated cylinder',
+                negControl: 'Hydrogen peroxide substrate + distilled water (no catalase added)',
+                posControl: 'Catalase + H2O2 at optimal 25°C room temperature',
+                controlledVars: [
+                    'Substrate concentration (3% H2O2 constant)',
+                    'pH level (buffered at pH 7.0)',
+                    'Enzyme volume (2.0 mL per trial)',
+                    'Reaction container volume and shape'
+                ],
+                protocol: [
+                    'Prepare 5 water baths calibrated to 10°C, 25°C, 40°C, 55°C, and 70°C using ice and hot plates.',
+                    'Pipette 2.0 mL of standardized catalase solution into 15 test tubes.',
+                    'Equilibrate test tubes in their respective water baths for 5 minutes prior to mixing.',
+                    'Add 5.0 mL of 3% H2O2, attach gas sensor stopper immediately, and record volume of O2 evolved over 3 minutes.',
+                    'Repeat each temperature level for n = 3 trials.'
+                ]
+            },
+            {
+                id: 'osmosis',
+                title: 'Osmosis & Sucrose Salinity',
+                topic: 'Osmotic Water Transfer in Potato Core Tissues',
+                category: 'Cell Transport',
+                ifText: 'potato core tissues are immersed in sucrose solutions ranging from 0.0M to 1.0M molarity,',
+                thenText: 'the percentage change in tissue mass will decrease linearly from positive gain to negative loss,',
+                becauseText: 'water moves down its water potential gradient via osmosis from hypotonic solutions into hypertonic tissue, reaching equilibrium at isotonic concentration.',
+                iv: 'Sucrose Solution Concentration',
+                ivLevels: '0.0M, 0.2M, 0.4M, 0.6M, 0.8M, 1.0M',
+                ivUnits: 'Molarity (M)',
+                dv: 'Percentage Change in Potato Core Mass',
+                dvMetric: '((Final Mass - Initial Mass) / Initial Mass) * 100',
+                dvTool: 'Digital analytical balance (±0.01g)',
+                negControl: 'Distilled water (0.0M sucrose solution)',
+                posControl: 'Isotonic solution reference standard',
+                controlledVars: [
+                    'Potato core diameter and length (1.0 cm x 3.0 cm)',
+                    'Immersion time (24 hours at 20°C)',
+                    'Volume of sucrose solution per beaker (50 mL)',
+                    'Surface blotting procedure before weighing'
+                ],
+                protocol: [
+                    'Prepare 0.0M, 0.2M, 0.4M, 0.6M, 0.8M, and 1.0M sucrose solutions in labeled beakers.',
+                    'Use a cork borer to cut 18 uniform potato cores and trim to exactly 3.0 cm length.',
+                    'Gently blot surface moisture and record initial mass (g) for each core.',
+                    'Place 3 cores into each molarity solution for 24 hours.',
+                    'Remove cores, blot excess solution, record final mass, and calculate % mass change.'
+                ]
+            },
+            {
+                id: 'photosynthesis',
+                title: 'Photosynthesis & Light Intensity',
+                topic: 'Light Intensity vs Photosynthetic Rate in Elodea',
+                category: 'Bioenergetics',
+                ifText: 'the distance between a light source and Elodea sprigs is decreased from 50 cm to 10 cm,',
+                thenText: 'the rate of oxygen bubble release will increase proportional to the inverse square of the distance,',
+                becauseText: 'higher photon flux density delivers more energy to Photosystem II reaction centers, accelerating photolysis up to light saturation.',
+                iv: 'Light Intensity / Distance from Source',
+                ivLevels: '10 cm, 20 cm, 30 cm, 40 cm, 50 cm',
+                ivUnits: 'Centimeters (cm) / Lux',
+                dv: 'Rate of Oxygen Gas Bubbles Released',
+                dvMetric: 'Number of oxygen bubbles per minute',
+                dvTool: 'Manual tally counter & timer / Dissolved O2 probe',
+                negControl: 'Elodea stem wrapped in aluminum foil (darkness/0 light)',
+                posControl: 'Elodea at standard room light intensity',
+                controlledVars: [
+                    'Sodium bicarbonate concentration (1% NaHCO3 for CO2 availability)',
+                    'Water bath temperature (heat sink tube placed between lamp and plant)',
+                    'Elodea stem length and leaf surface area',
+                    'Wavelength spectrum (same LED bulb)'
+                ],
+                protocol: [
+                    'Submerge 10 cm fresh Elodea sprigs cut at an angle in 1% NaHCO3 solution.',
+                    'Place a clear water tank between the LED light and plant setup to act as a heat shield.',
+                    'Position the light source at 50 cm, allow 3 minutes equilibration, then count bubbles for 3 minutes.',
+                    'Move light source closer (40cm, 30cm, 20cm, 10cm) and repeat for n=3 trials per distance.',
+                    'Record average bubble rate per minute for each light distance.'
+                ]
+            }
+        ];
+
+        let state = {
+            currentTab: 'dashboard',
+            hypothesis: {
+                title: '',
+                ifText: '',
+                thenText: '',
+                becauseText: ''
+            },
+            variables: {
+                iv: '',
+                ivLevels: '',
+                ivUnits: '',
+                dv: '',
+                dvMetric: '',
+                dvTool: '',
+                negControl: '',
+                posControl: '',
+                controlledVars: ['Temperature (22°C constant)', 'pH level (buffered at 7.0)']
+            },
+            protocol: {
+                ivLevelsCount: 5,
+                replicatesCount: 3,
+                steps: [
+                    'Prepare baseline solutions and calibrate diagnostic sensors.',
+                    'Distribute biological samples randomly into 5 treatment groups.',
+                    'Apply independent variable treatment across designated ranges.',
+                    'Allow reaction/incubation time while maintaining controlled variables.',
+                    'Record quantifiable dependent variable response for n=3 replicates.'
+                ]
+            },
+            rubricScores: {
+                c1: 4,
+                c2: 4,
+                c3: 4,
+                c4: 4
+            }
+        };
+
+        /* ================= INITIALIZATION ================= */
+        window.onload = function() {
+            renderPresets();
+            renderControlledVariables();
+            renderProtocolSteps();
+            updateHypothesisPreview();
+            updateVariables();
+            calculateSampleValidity();
+        };
+
+        /* ================= TAB NAVIGATION ================= */
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            const pages = ['dashboard', 'hypothesis', 'variables', 'protocol', 'review', 'report'];
+            
+            pages.forEach(p => {
+                const pageEl = document.getElementById(`page-${p}`);
+                const tabBtn = document.getElementById(`tab-${p}`);
+                if (pageEl) {
+                    if (p === tabId) {
+                        pageEl.classList.remove('hidden');
+                    } else {
+                        pageEl.classList.add('hidden');
+                    }
+                }
+                if (tabBtn) {
+                    if (p === tabId) {
+                        tabBtn.classList.add('border-bio-500', 'text-bio-500');
+                        tabBtn.classList.remove('border-transparent', 'text-slate-400');
+                    } else {
+                        tabBtn.classList.remove('border-bio-500', 'text-bio-500');
+                        tabBtn.classList.add('border-transparent', 'text-slate-400');
+                    }
+                }
+            });
+
+            // Update Progress Header
+            const progressMap = {
+                'dashboard': { step: 0, pct: '10%', name: 'Overview' },
+                'hypothesis': { step: 1, pct: '25%', name: '1. Hypothesis' },
+                'variables': { step: 2, pct: '50%', name: '2. Variables & Controls' },
+                'protocol': { step: 3, pct: '75%', name: '3. Protocol & Replication' },
+                'review': { step: 4, pct: '90%', name: '4. Peer Review' },
+                'report': { step: 5, pct: '100%', name: '5. Final Report' }
+            };
+
+            const prog = progressMap[tabId] || progressMap['dashboard'];
+            document.getElementById('headerProgressText').innerText = `Stage ${prog.step} of 5: ${prog.name}`;
+            document.getElementById('headerProgressBar').style.width = prog.pct;
+
+            if (tabId === 'report') {
+                generateFinalReportView();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ================= SCENARIO PRESETS ================= */
+        function renderPresets() {
+            const grid = document.getElementById('presetScenarioGrid');
+            const modalList = document.getElementById('modalPresetList');
+            grid.innerHTML = '';
+            modalList.innerHTML = '';
+
+            PRESET_SCENARIOS.forEach(sc => {
+                // Main Grid Card
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-bio-100 text-bio-800">${sc.category}</span>
+                            <i class="fa-solid fa-flask text-slate-300"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-base">${sc.title}</h3>
+                        <p class="text-xs text-slate-500 line-clamp-2">${sc.topic}</p>
+                    </div>
+                    <button onclick="loadPreset('${sc.id}')" class="w-full py-2 bg-slate-900 hover:bg-bio-600 text-white text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>Load Scenario into Planner</span>
+                    </button>
+                `;
+                grid.appendChild(card);
+
+                // Modal Item
+                const modalItem = document.createElement('div');
+                modalItem.className = "p-4 border border-slate-200 rounded-xl hover:border-bio-500 cursor-pointer transition bg-slate-50 hover:bg-bio-50/30 flex items-center justify-between";
+                modalItem.onclick = () => { loadPreset(sc.id); closePresetModal(); };
+                modalItem.innerHTML = `
+                    <div>
+                        <span class="text-[10px] font-bold text-bio-700 uppercase">${sc.category}</span>
+                        <h4 class="font-bold text-slate-800 text-sm">${sc.title}</h4>
+                        <p class="text-xs text-slate-500">${sc.topic}</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                `;
+                modalList.appendChild(modalItem);
+            });
+        }
+
+        function loadPresetScenarioModal() {
+            document.getElementById('presetModal').classList.remove('hidden');
+        }
+
+        function closePresetModal() {
+            document.getElementById('presetModal').classList.add('hidden');
+        }
+
+        function loadPreset(scenarioId) {
+            const sc = PRESET_SCENARIOS.find(s => s.id === scenarioId);
+            if (!sc) return;
+
+            // Load into hypothesis
+            document.getElementById('hypoTitle').value = sc.topic;
+            document.getElementById('hypoIf').value = sc.ifText;
+            document.getElementById('hypoThen').value = sc.thenText;
+            document.getElementById('hypoBecause').value = sc.becauseText;
+
+            // Load into variables
+            document.getElementById('varIV').value = sc.iv;
+            document.getElementById('varIVLevels').value = sc.ivLevels;
+            document.getElementById('varIVUnits').value = sc.ivUnits;
+            document.getElementById('varDV').value = sc.dv;
+            document.getElementById('varDVMetric').value = sc.dvMetric;
+            document.getElementById('varDVTool').value = sc.dvTool;
+            document.getElementById('varNegControl').value = sc.negControl;
+            document.getElementById('varPosControl').value = sc.posControl;
+
+            state.variables.controlledVars = [...sc.controlledVars];
+            renderControlledVariables();
+
+            state.protocol.steps = [...sc.protocol];
+            renderProtocolSteps();
+
+            updateHypothesisPreview();
+            updateVariables();
+            switchTab('hypothesis');
+        }
+
+        /* ================= MODULE 1: HYPOTHESIS LOGIC ================= */
+        function updateHypothesisPreview() {
+            const title = document.getElementById('hypoTitle').value.trim();
+            const ifVal = document.getElementById('hypoIf').value.trim();
+            const thenVal = document.getElementById('hypoThen').value.trim();
+            const becauseVal = document.getElementById('hypoBecause').value.trim();
+
+            state.hypothesis = { title, ifText: ifVal, thenText: thenVal, becauseText: becauseVal };
+
+            // Badges
+            updateBadge('badgeIf', ifVal.length > 5);
+            updateBadge('badgeThen', thenVal.length > 5);
+            updateBadge('badgeBecause', becauseVal.length > 10);
+
+            // Live Preview Box
+            const previewBox = document.getElementById('hypoPreviewBox');
+            if (ifVal || thenVal || becauseVal) {
+                previewBox.innerHTML = `
+                    <span class="text-bio-400 font-bold">IF</span> ${ifVal || '[IV manipulation]'}, 
+                    <span class="text-blue-400 font-bold">THEN</span> ${thenVal || '[measurable response]'}, 
+                    <span class="text-purple-400 font-bold">BECAUSE</span> ${becauseVal || '[scientific reasoning]'}.
+                `;
+            } else {
+                previewBox.innerHTML = `"If [enter IV action], then [enter expected outcome], because [enter biological reason]."`;
+            }
+
+            // Diagnostics Checklist
+            toggleCheck('chkIvPresent', ifVal.length > 5);
+            toggleCheck('chkDvMeasurable', thenVal.length > 5 && (thenVal.includes('rate') || thenVal.includes('increase') || thenVal.includes('decrease') || thenVal.includes('ml') || thenVal.includes('%')));
+            toggleCheck('chkBioReasoning', becauseVal.length > 15);
+        }
+
+        function updateBadge(id, isValid) {
+            const badge = document.getElementById(id);
+            if (isValid) {
+                badge.className = "text-xs px-2 py-0.5 rounded bg-bio-100 text-bio-800 font-semibold";
+                badge.innerText = "Complete";
+            } else {
+                badge.className = "text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold";
+                badge.innerText = "Needs Input";
+            }
+        }
+
+        function toggleCheck(id, isPass) {
+            const el = document.getElementById(id);
+            if (isPass) {
+                el.className = "flex items-center gap-2 text-bio-400 font-medium";
+                el.innerHTML = `<i class="fa-solid fa-circle-check text-bio-400"></i> ${el.innerText}`;
+            } else {
+                el.className = "flex items-center gap-2 text-slate-400";
+                el.innerHTML = `<i class="fa-solid fa-circle-xmark text-slate-500"></i> ${el.innerText}`;
+            }
+        }
+
+        /* ================= MODULE 2: VARIABLES WORKSHOP ================= */
+        function renderControlledVariables() {
+            const container = document.getElementById('controlledVarsContainer');
+            container.innerHTML = '';
+            state.variables.controlledVars.forEach((cv, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-2";
+                item.innerHTML = `
+                    <input type="text" value="${cv}" onchange="updateControlledVar(${idx}, this.value)" class="flex-1 px-3 py-1.5 rounded border border-slate-300 text-xs">
+                    <button onclick="removeControlledVar(${idx})" class="p-1.5 text-slate-400 hover:text-rose-500 transition">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addControlledVariableField() {
+            state.variables.controlledVars.push('New Constant Factor');
+            renderControlledVariables();
+        }
+
+        function updateControlledVar(index, val) {
+            state.variables.controlledVars[index] = val;
+        }
+
+        function removeControlledVar(index) {
+            state.variables.controlledVars.splice(index, 1);
+            renderControlledVariables();
+        }
+
+        function updateVariables() {
+            state.variables.iv = document.getElementById('varIV').value;
+            state.variables.ivLevels = document.getElementById('varIVLevels').value;
+            state.variables.ivUnits = document.getElementById('varIVUnits').value;
+            state.variables.dv = document.getElementById('varDV').value;
+            state.variables.dvMetric = document.getElementById('varDVMetric').value;
+            state.variables.dvTool = document.getElementById('varDVTool').value;
+            state.variables.negControl = document.getElementById('varNegControl').value;
+            state.variables.posControl = document.getElementById('varPosControl').value;
+
+            // Live Alerts
+            const alertBox = document.getElementById('variableValidationAlert');
+            const list = document.getElementById('variableValidationList');
+            list.innerHTML = '';
+            let issues = [];
+
+            if (!state.variables.ivUnits) issues.push('Specify units of measurement for your Independent Variable (e.g. °C, mM, Lux).');
+            if (!state.variables.negControl) issues.push('Designate a Negative Control Group to serve as a baseline comparison.');
+            if (state.variables.controlledVars.length < 2) issues.push('Add at least 2 Controlled Variables to prevent confounding factors.');
+
+            if (issues.length > 0) {
+                alertBox.classList.remove('hidden');
+                issues.forEach(iss => {
+                    const li = document.createElement('li');
+                    li.innerText = iss;
+                    list.appendChild(li);
+                });
+            } else {
+                alertBox.classList.add('hidden');
+            }
+        }
+
+        /* ================= MODULE 3: PROTOCOL & REPLICATION ================= */
+        function calculateSampleValidity() {
+            const levels = parseInt(document.getElementById('numIvLevels').value) || 1;
+            const reps = parseInt(document.getElementById('numReplicates').value) || 1;
+            state.protocol.ivLevelsCount = levels;
+            state.protocol.replicatesCount = reps;
+
+            const total = levels * reps;
+            document.getElementById('totalTestRunsDisplay').innerText = `${total} Total Experimental Runs`;
+
+            const feedback = document.getElementById('replicationFeedback');
+            if (reps < 3) {
+                feedback.innerHTML = `<span class="text-rose-300"><i class="fa-solid fa-triangle-exclamation text-rose-400 mr-2"></i> Warning: n < 3 replicates is insufficient for calculating Standard Error or Standard Deviation!</span>`;
+            } else {
+                feedback.innerHTML = `<span><i class="fa-solid fa-circle-check text-bio-400 mr-2"></i> Valid Replication Power (n=${reps}): Allows calculating mean ± SD and 95% Confidence Error Bars.</span>`;
+            }
+        }
+
+        function renderProtocolSteps() {
+            const container = document.getElementById('protocolStepsContainer');
+            container.innerHTML = '';
+            state.protocol.steps.forEach((step, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200";
+                item.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center mt-0.5">${idx + 1}</span>
+                    <textarea rows="2" onchange="updateProtocolStep(${idx}, this.value)" class="flex-1 p-2 rounded border border-slate-300 text-xs bg-white">${step}</textarea>
+                    <button onclick="removeProtocolStep(${idx})" class="p-1 text-slate-400 hover:text-rose-500 transition mt-1">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addProtocolStep() {
+            state.protocol.steps.push('Enter next experimental procedure step...');
+            renderProtocolSteps();
+        }
+
+        function updateProtocolStep(idx, val) {
+            state.protocol.steps[idx] = val;
+        }
+
+        function removeProtocolStep(idx) {
+            state.protocol.steps.splice(idx, 1);
+            renderProtocolSteps();
+        }
+
+        /* ================= MODULE 4: PEER REVIEW SIMULATOR ================= */
+        function setScore(criterion, score) {
+            state.rubricScores[`c${criterion}`] = score;
+            const badge = document.getElementById(`scoreBadge${criterion}`);
+            badge.innerText = `${score} / 4`;
+            
+            // Recalculate Total Score
+            const total = state.rubricScores.c1 + state.rubricScores.c2 + state.rubricScores.c3 + state.rubricScores.c4;
+            document.getElementById('totalRubricScore').innerText = `Score: ${total} / 16`;
+        }
+
+        function runPeerReviewSimulation() {
+            const feedbackStream = document.getElementById('peerFeedbackStream');
+            feedbackStream.innerHTML = '';
+
+            const feedbackItems = [];
+
+            // Auto Evaluation based on state
+            if (state.hypothesis.ifText && state.hypothesis.thenText && state.hypothesis.becauseText) {
+                feedbackItems.push({
+                    author: 'Dr. Evelyn Vance (Peer Reviewer)',
+                    comment: 'Hypothesis is well-formed with logical "If... Then... Because..." scaffolding. Scientific rationale is evident.',
+                    type: 'pos'
+                });
+            } else {
+                feedbackItems.push({
+                    author: 'Dr. Evelyn Vance (Peer Reviewer)',
+                    comment: 'Hypothesis lacks clear separation of variables or scientific mechanism. Consider revising Section 1.',
+                    type: 'neg'
+                });
+            }
+
+            if (state.variables.negControl) {
+                feedbackItems.push({
+                    author: 'Prof. Marcus Brody (IB Evaluator)',
+                    comment: `Negative control group ("${state.variables.negControl}") successfully isolates the baseline measurement!`,
+                    type: 'pos'
+                });
+            } else {
+                feedbackItems.push({
+                    author: 'Prof. Marcus Brody (IB Evaluator)',
+                    comment: 'Missing negative control group! Without this, you cannot prove the IV was the cause of the observed change.',
+                    type: 'neg'
+                });
+            }
+
+            if (state.protocol.replicatesCount >= 3) {
+                feedbackItems.push({
+                    author: 'Statistical Review Bot',
+                    comment: `Replication parameter (n=${state.protocol.replicatesCount}) provides adequate statistical degrees of freedom for error bars.`,
+                    type: 'pos'
+                });
+            }
+
+            feedbackItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "p-3 bg-slate-800 rounded-lg border border-slate-700 space-y-1";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-bio-300">${item.author}</span>
+                        <span class="text-[10px] text-slate-400">Verified Reviewer</span>
+                    </div>
+                    <p class="text-slate-300">${item.comment}</p>
+                `;
+                feedbackStream.appendChild(card);
+            });
+        }
+
+        /* ================= MODULE 5: FINAL REPORT & EXPORT ================= */
+        function generateFinalReportView() {
+            // Title
+            document.getElementById('repTitle').innerText = state.hypothesis.title || "Untitled Biology Experiment";
+
+            // Hypothesis
+            document.getElementById('repHypothesis').innerText = 
+                state.hypothesis.ifText ? 
+                `"If ${state.hypothesis.ifText}, then ${state.hypothesis.thenText}, because ${state.hypothesis.becauseText}."` :
+                "Hypothesis incomplete.";
+
+            // Variables
+            document.getElementById('repIV').innerText = state.variables.iv || "Not specified";
+            document.getElementById('repIVDetails').innerText = `Levels: ${state.variables.ivLevels || 'N/A'} | Units: ${state.variables.ivUnits || 'N/A'}`;
+            
+            document.getElementById('repDV').innerText = state.variables.dv || "Not specified";
+            document.getElementById('repDVDetails').innerText = `Metric: ${state.variables.dvMetric || 'N/A'} | Instrument: ${state.variables.dvTool || 'N/A'}`;
+
+            document.getElementById('repControls').innerText = `Negative Control: ${state.variables.negControl || 'None'} | Positive Control: ${state.variables.posControl || 'None'}`;
+
+            // Controlled Vars
+            const cvList = document.getElementById('repControlledVars');
+            cvList.innerHTML = '';
+            state.variables.controlledVars.forEach(cv => {
+                const li = document.createElement('li');
+                li.innerText = cv;
+                cvList.appendChild(li);
+            });
+
+            // Protocol Steps
+            const protoList = document.getElementById('repProtocolList');
+            protoList.innerHTML = '';
+            state.protocol.steps.forEach((st, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex gap-2";
+                div.innerHTML = `<span class="font-bold text-bio-700">${idx+1}.</span> <span>${st}</span>`;
+                protoList.appendChild(div);
+            });
+
+            // Replication Summary
+            const totalRuns = state.protocol.ivLevelsCount * state.protocol.replicatesCount;
+            document.getElementById('repReplicationPower').innerText = `Sample Size: ${state.protocol.ivLevelsCount} IV levels × ${state.protocol.replicatesCount} trials = ${totalRuns} total test runs.`;
+
+            // Score
+            const totalScore = state.rubricScores.c1 + state.rubricScores.c2 + state.rubricScores.c3 + state.rubricScores.c4;
+            document.getElementById('repFinalScore').innerText = `${totalScore} / 16 Score`;
+        }
+
+        function copyMarkdownReport() {
+            const mdText = `
+# Experimental Proposal: ${state.hypothesis.title || 'Untitled Experiment'}
+
+## 1. Formulated Hypothesis
+> "If ${state.hypothesis.ifText}, then ${state.hypothesis.thenText}, because ${state.hypothesis.becauseText}."
+
+## 2. Variable Isolation
+- **Independent Variable (IV):** ${state.variables.iv} (Levels: ${state.variables.ivLevels}, Units: ${state.variables.ivUnits})
+- **Dependent Variable (DV):** ${state.variables.dv} (Metric: ${state.variables.dvMetric}, Tool: ${state.variables.dvTool})
+- **Negative Control Group:** ${state.variables.negControl}
+- **Positive Control Group:** ${state.variables.posControl}
+- **Controlled Variables (Constants):** ${state.variables.controlledVars.join(', ')}
+
+## 3. Experimental Protocol & Replication
+- **Replication Scheme:** ${state.protocol.ivLevelsCount} levels × ${state.protocol.replicatesCount} replicates (${state.protocol.ivLevelsCount * state.protocol.replicatesCount} total runs)
+${state.protocol.steps.map((st, i) => `${i+1}. ${st}`).join('\n')}
+
+*Generated using BioLab Planner*
+            `.trim();
+
+            navigator.clipboard.writeText(mdText).then(() => {
+                alert("Markdown lab report copied to clipboard!");
+            });
+        }
+
+        function resetPlanner() {
+            if (confirm("Are you sure you want to reset all experiment data?")) {
+                document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+                state.variables.controlledVars = ['Constant Factor 1', 'Constant Factor 2'];
+                state.protocol.steps = ['Step 1 protocol instruction...'];
+                renderControlledVariables();
+                renderProtocolSteps();
+                updateHypothesisPreview();
+                updateVariables();
+                switchTab('dashboard');
+            }
+        }
+    </script>
+</body>
+</html>
