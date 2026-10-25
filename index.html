@@ -6,11 +6,22 @@
     <title>BioLab Planner - Scientific Experiment Design Platform</title>
     <style>
         :root {
-         /* Extreme Dark Navy Palette */
+            /* Ultra-Dark Navy Surfaces */
+            --bg-main: #030712;         /* Deepest obsidian-black navy */
+            --bg-card: #0a0f1d;         /* Obsidian navy panel background */
+            --bg-card-hover: #111827;   /* Hover panel state */
+            
+            /* Extreme Dark Navy Palette */
             --bg-main: #020617;         /* Pitch midnight navy body background */
             --bg-card: #0b1329;         /* Dark navy panel & card background */
             --bg-card-hover: #111e38;   /* Hover state for dark cards */
             --bg-input: #0f172a;        /* Slate dark navy for form inputs */
+
+            /* Accents & Highlights */
+            --primary: #2563eb;         /* Royal electric blue */
+            --primary-hover: #1d4ed8;   /* Darker royal blue hover */
+            --primary-light: rgba(37, 99, 235, 0.15); /* Soft glowing aura */
+            --accent: #38bdf8;          /* Vibrant cyan highlight */
             
             /* Deep Dark Blue Accents (No Royal Blue) */
             --primary: #1e293b;         /* Deep slate navy for tab & button bases */
@@ -19,20 +30,30 @@
             --primary-hover: #172554;   /* Muted dark blue hover state */
             --primary-light: rgba(30, 58, 138, 0.25); /* Subtle dark blue overlay */
             --accent-text: #93c5fd;     /* Soft ice blue for key section headers */
+
+            /* Typography */
+            --text-main: #f8fafc;       /* Crisp off-white */
+            --text-muted: #94a3b8;      /* Muted gray-blue */
+            --text-placeholder: #64748b;/* Darker placeholder text */
             
             /* High-Contrast Readability Text */
             --text-main: #f8fafc;       /* Off-white primary text */
             --text-muted: #94a3b8;      /* Muted gray-blue secondary text */
             --text-placeholder: #475569;/* Subtle placeholder text */
-            
+
+            /* Borders & Utilities */
+            --border: #1e293b;          /* Subtle dark slate border */
+            --border-active: #3b82f6;   /* Active border on focus */
+                      
             /* Status Alerts */
             --border: #1e293b;          /* Dark slate divider border */
             --border-active: #2563eb;   /* Deep blue focus outline */
             --danger: #ef4444;
             --success: #10b981;
             --radius: 10px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8);
-        }
+          }
 
         * {
             box-sizing: border-box;
